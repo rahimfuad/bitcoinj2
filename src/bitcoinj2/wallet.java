@@ -5,14 +5,21 @@
  */
 package bitcoinj2;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import java.io.File;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.utils.BriefLogFormatter;
+import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 
 /**
  *
@@ -59,8 +66,47 @@ public class wallet {
         kit.startAsync();
         kit.awaitRunning();
         System.out.println(kit.wallet());
+        
+        kit.wallet().addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet w, Transaction tx, Coin prevBalance, Coin newBalance) {
+                // Runs in the dedicated "user thread".
+                //
+                // The transaction "tx" can either be pending, or included into a block (we didn't see the broadcast).
+                Coin value = tx.getValueSentToMe(w);
+                System.out.println("Received tx for " + value.toFriendlyString() + ": " + tx);
+                System.out.println("Transaction will be forwarded after it confirms.");
+                // Wait until it's made it into the block chain (may run immediately if it's already there).
+                //
+                // For this dummy app of course, we could just forward the unconfirmed transaction. If it were
+                // to be double spent, no harm done. Wallet.allowSpendingUnconfirmedTransactions() would have to
+                // be called in onSetupCompleted() above. But we don't do that here to demonstrate the more common
+                // case of waiting for a block.
+                Futures.addCallback(tx.getConfidence().getDepthFuture(1), new FutureCallback<TransactionConfidence>() {
+                    @Override
+                    public void onSuccess(TransactionConfidence result) {
+                        // "result" here is the same as "tx" above, but we use it anyway for clarity.
+                        forwardCoins(result);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {}
+
+                    private void forwardCoins(TransactionConfidence result) {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                });
+            }
+
+            //@Override
+//            public void onCoinsReceived(Wallet wallet, Transaction t, Coin coin, Coin coin1) {
+//                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//            }
+        });
+
     
     }
+    
     
     
     

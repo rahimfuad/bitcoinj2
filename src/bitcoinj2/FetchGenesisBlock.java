@@ -55,7 +55,7 @@ public class FetchGenesisBlock {
             Peer peer1 = peer.getConnectedPeers().get(0);
             System.out.println("done connected");
             
-            Sha256Hash blockHash = Sha256Hash.wrap("00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008");
+            Sha256Hash blockHash = Sha256Hash.wrap("000000000000000f90768f606842977d8a0f0a516b310759d8c82fbc17228c13");
             
             Future<Block> future = peer1.getBlock(blockHash);
             //System.out.println(wallet);
